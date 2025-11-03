@@ -1,15 +1,13 @@
-from decimal import Decimal, InvalidOperation
-from app.commands import Command
-from calculator.imports import CalcEngine
+"""
+Power plugin: Provides a function to raise x to the power of y.
+"""
 
-class PowerCommand(Command):
-    def execute(self, a_str: str, b_str: str) -> None:
-        try:
-            base = Decimal(a_str)
-            exponent = Decimal(b_str)
-        except InvalidOperation:
-            print(f"Invalid input: {a_str}, {b_str}")
-            return
+from calculator.calculation import OperationRecord
+from calculator.history.history import OperationHistory
+from decimal import Decimal
 
-        result = CalcEngine.power(base, exponent)
-        print(f"{a_str} ^ {b_str} = {result}")
+def power_numbers(x: Decimal, y: Decimal) -> Decimal:
+    """Return x raised to the power y and record in history."""
+    record = OperationRecord.create(x, y, lambda a, b: a ** b)
+    OperationHistory.add_record(record)
+    return record.execute()

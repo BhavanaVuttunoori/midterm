@@ -1,14 +1,13 @@
-from decimal import Decimal, InvalidOperation
-from app.commands import Command
-from calculator.imports import CalcEngine  # adjust if needed
+"""
+Square plugin: Provides a function to square a number.
+"""
 
-class SquareCommand(Command):
-    def execute(self, a_str: str) -> None:
-        try:
-            val_a = Decimal(a_str)
-        except InvalidOperation:
-            print(f"Invalid number input: {a_str} is not a valid number.")
-            return
+from calculator.calculation import OperationRecord
+from calculator.history.history import OperationHistory
+from decimal import Decimal
 
-        result = CalcEngine.square(val_a)
-        print(f"The square of {a_str} is {result}")
+def square_number(x: Decimal) -> Decimal:
+    """Return the square of x and record in history."""
+    record = OperationRecord.create(x, x, lambda a, b: a * b)
+    OperationHistory.add_record(record)
+    return record.execute()

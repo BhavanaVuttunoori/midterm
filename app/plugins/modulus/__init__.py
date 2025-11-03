@@ -1,15 +1,13 @@
-from decimal import Decimal, InvalidOperation
-from app.commands import Command
-from calculator.imports import CalcEngine
+"""
+Modulus plugin: Provides a function to compute x modulo y.
+"""
 
-class ModulusCommand(Command):
-    def execute(self, a_str: str, b_str: str) -> None:
-        try:
-            a = Decimal(a_str)
-            b = Decimal(b_str)
-        except InvalidOperation:
-            print(f"Invalid input: {a_str}, {b_str}")
-            return
+from calculator.calculation import OperationRecord
+from calculator.history.history import OperationHistory
+from decimal import Decimal
 
-        result = CalcEngine.modulus(a, b)
-        print(f"{a_str} % {b_str} = {result}")
+def mod_numbers(x: Decimal, y: Decimal) -> Decimal:
+    """Return x % y and record in history."""
+    record = OperationRecord.create(x, y, lambda a, b: a % b)
+    OperationHistory.add_record(record)
+    return record.execute()
