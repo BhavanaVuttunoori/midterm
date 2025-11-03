@@ -1,6 +1,11 @@
 from decimal import Decimal
 from app.plugins import square, power, modulus
 from calculator.engine import CalcEngine
+from app.plugins.root import Root
+from app.plugins.int_divide import IntDivide
+from app.plugins.percent import Percent
+from app.plugins.abs_diff import AbsDiff
+
 
 class App:
     """Main Calculator App."""
@@ -21,6 +26,11 @@ class App:
         print(" - square")
         print(" - power")
         print(" - modulus")
+        print(" - root")
+        print(" - int_divide")
+        print(" - percent")
+        print(" - abs_diff")
+
         print("Type 'help' to show commands, 'exit' to quit.\n")
 
     def run_demo(self):
@@ -28,6 +38,11 @@ class App:
         print("Square 5:", square.square_number(Decimal(5)))
         print("2 ^ 3:", power.power_numbers(Decimal(2), Decimal(3)))
         print("10 % 3:", modulus.mod_numbers(Decimal(10), Decimal(3)))
+        print("Cube root of 27:", Root().calculate(Decimal(27), Decimal(3)))
+        print("Integer Divide 10 // 3:", IntDivide().calculate(Decimal(10), Decimal(3)))
+        print("Percentage 25 of 200:", Percent().calculate(Decimal(25), Decimal(200)))
+        print("Absolute Difference 10 and 3:", AbsDiff().calculate(Decimal(10), Decimal(3)))
+
 
     def command_loop(self):
         """Interactive loop for user input."""
@@ -62,6 +77,14 @@ class App:
                     print(CalcEngine.product(args[0], args[1]))
                 elif command == "divide" and len(args) == 2:
                     print(CalcEngine.quotient(args[0], args[1]))
+                elif command == "root" and len(args) == 2:
+                    print(Root().calculate(args[0], args[1]))
+                elif command == "int_divide" and len(args) == 2:
+                    print(IntDivide().calculate(args[0], args[1]))
+                elif command == "percent" and len(args) == 2:
+                    print(Percent().calculate(args[0], args[1]))
+                elif command == "abs_diff" and len(args) == 2:
+                    print(AbsDiff().calculate(args[0], args[1]))
                 else:
                     print("Unknown command or wrong number of arguments.")
             except Exception as e:
@@ -78,3 +101,5 @@ class App:
             args = parts[1:]
 
             # Here is where you'll check commands and call CalcEngine methods
+
+    
