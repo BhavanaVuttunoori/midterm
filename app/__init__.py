@@ -30,10 +30,7 @@ class App:
         log_level = self.settings.get('LOG_LEVEL', 'INFO').upper()
         log_output = self.settings.get('LOG_OUTPUT', './logs/app.log')
 
-        # Ensure the log directory exists
-        log_directory = os.path.dirname(log_output)
-        os.makedirs(log_directory, exist_ok=True)
-
+        os.makedirs(os.path.dirname(log_output), exist_ok=True)
         numeric_level = getattr(logging, log_level, logging.INFO)
 
         logging.basicConfig(
@@ -75,40 +72,36 @@ class App:
         """Discover and register plugin commands from plugins directory."""
         plugins_package = 'app.plugins'
         self.logger.info("Starting plugin loading process")
-        if not self._plugins_directory_exists(plugins_package):
-            return
-
-        for module_info in pkgutil.iter_modules([plugins_package.replace('.', '/')]):
-            # Load all modules (remove package-only filter)
-            self._process_plugin_module(plugins_package, module_info.name)
-
-    def _plugins_directory_exists(self, plugins_package: str) -> bool:
         plugins_path = plugins_package.replace('.', '/')
         if not os.path.exists(plugins_path):
             self.logger.error("Plugin directory %s not found", plugins_path)
-            return False
-        return True
+            return
+
+        for module_info in pkgutil.iter_modules([plugins_path]):
+            self._process_plugin_module(plugins_package, module_info.name)
 
     def _process_plugin_module(self, plugins_package: str, plugin_name: str):
         try:
             plugin_module = importlib.import_module(f'{plugins_package}.{plugin_name}')
-            self._register_commands_from_module(plugin_module, plugin_name)
+            self._register_commands_from_module(plugin_module)
         except Exception as error:
             self.logger.error("Error loading plugin %s: %s", plugin_name, str(error), exc_info=True)
 
-    def _register_commands_from_module(self, plugin_module, plugin_name: str):
+    def _register_commands_from_module(self, plugin_module):
         for item_name in dir(plugin_module):
             item = getattr(plugin_module, item_name)
             if not isinstance(item, type) or not issubclass(item, Command) or item == Command:
                 continue
             command_instance = item() if item_name != 'MenuCommand' else item(self.command_handler)
-            self.command_handler.register_command(plugin_name, command_instance)
-            self.logger.info("Registered command: %s", plugin_name)
+            # Use lowercase class name without 'Command' suffix as command key
+            command_key = item_name.replace('Command', '').lower()
+            self.command_handler.register_command(command_key, command_instance)
+            self.logger.info("Registered command: %s", command_key)
 
     def show_commands(self):
         """Print all available commands."""
         print("\nAvailable commands:")
-        for cmd_name in self.command_handler.commands:
+        for cmd_name in sorted(self.command_handler.commands.keys()):
             print(f" - {cmd_name}")
         print("Type 'help' to show commands, 'exit' to quit.\n")
 
@@ -153,15 +146,12 @@ class App:
             return
 
         command_name, args = parts[0], parts[1:]
-        if command_name in self.command_handler.commands:
-            command = self.command_handler.commands[command_name]
-            if callable(command.execute):
-                try:
-                    command.execute(*args) if args else command.execute()
-                except TypeError as e:
-                    print(f"Error: {e}")
-            else:
-                print("Command is not executable")
+        command = self.command_handler.commands.get(command_name)
+        if command and callable(command.execute):
+            try:
+                command.execute(*args) if args else command.execute()
+            except TypeError as e:
+                print(f"Error: {e}")
         else:
             print(f"No such command: {command_name}")
 
