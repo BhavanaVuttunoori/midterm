@@ -1,21 +1,22 @@
-
 """Main application module for calculator REPL interface."""
+
 import importlib
 import logging
+import logging.handlers
 import os
 import pkgutil
-from typing import Dict
 from dotenv import load_dotenv
 from app.commands import Command, CommandHandler
-import logging
-import logging.config
+
+
 class App:
     """Main application class handling initialization, 
-        plugin loading, and REPL execution."""
+    plugin loading, and REPL execution."""
+
     def __init__(self, start_repl=True):
         """Initialize application components and environment."""
-        self.load_environment()        
-        self.setup_logging()        
+        self.load_environment()
+        self.setup_logging()
         self.logger = logging.getLogger(__name__)
         self.logger.info("Application is Starting")
         self.command_handler = CommandHandler()
@@ -23,7 +24,6 @@ class App:
         self.logger.info("Application initialized")
         if start_repl:
             self.run_repl()
-        
 
     def setup_logging(self):
         """Configure logging using environment variables."""
@@ -57,7 +57,7 @@ class App:
         try:
             load_dotenv()
             self.settings = dict(os.environ)
-            environment = self.get_environment_variable('ENVIRONMENT')  # Specify parameter
+            environment = self.get_environment_variable('ENVIRONMENT')
             print("Environment variables loaded successfully")
             print(f"Current environment: {environment}")
         except Exception as e:
@@ -65,18 +65,10 @@ class App:
             raise
 
     def get_environment_variable(self, env_var: str = 'ENVIRONMENT'):
-        """
-        Retrieve and validate environment variable.
-        
-        Args:
-            env_var: Name of the environment variable to retrieve
-            
-        Returns:
-            Value of the environment variable or empty string if not found
-        """
+        """Retrieve and validate environment variable."""
         value = self.settings.get(env_var, None)
         if not value:
-            self.logger.warning("Environment variable %s not set", env_var)
+            logging.warning("Environment variable %s not set", env_var)
         return value
 
     def load_plugins(self):
@@ -102,7 +94,7 @@ class App:
         try:
             plugin_module = importlib.import_module(f'{plugins_package}.{plugin_name}')
             self._register_commands_from_module(plugin_module, plugin_name)
-        except Exception as error: # pylint: disable=broad-except
+        except Exception as error:  # pylint: disable=broad-except
             self.logger.error("Error loading plugin %s: %s", plugin_name, str(error), exc_info=True)
 
     def _register_commands_from_module(self, plugin_module, plugin_name: str):
@@ -114,27 +106,44 @@ class App:
             self.command_handler.register_command(plugin_name, command_instance)
             self.logger.info("Registered command: %s", plugin_name)
 
+    def show_commands(self):
+        """Print all available commands."""
+        print("\nAvailable commands:")
+        for cmd_name in self.command_handler.commands:
+            print(f" - {cmd_name}")
+        print("Type 'help' to show commands, 'exit' to quit.\n")
+
     def run_repl(self):
         """Run Read-Eval-Print Loop (REPL) interface for user interaction."""
         self.logger.info("Starting REPL interface")
-        print("Welcome to Calculator")
+        print("Welcome to Calculator!")
+        self.show_commands()
 
         try:
             while True:
                 try:
-                   user_input = input(">>> ").strip()
-                   self.logger.debug("User input: %s", user_input)
+                    user_input = input(">>> ").strip()
+                    self.logger.debug("User input: %s", user_input)
 
-                   if user_input.lower() == "exit":
+                    if not user_input:
+                        continue
+
+                    if user_input.lower() == "exit":
                         self.logger.info("Exit command received")
                         self.command_handler.execute_command("exit")
-                        raise SystemExit("Exiting...")  # ✅ Explicitly raise SystemExit
+                        raise SystemExit("Exiting...")
 
-                   self._execute_command(user_input)
+                    if user_input.lower() in ['help', '?']:
+                        self.show_commands()
+                        continue
+
+                    self._execute_command(user_input)
+
                 except KeyboardInterrupt:
                     self.logger.info("Keyboard interrupt detected")
                     print("\nExiting...")
-                    raise SystemExit("Exiting...")  # ✅ Raise SystemExit on Ctrl+C
+                    raise SystemExit("Exiting...")
+
         except Exception as e:
             self.logger.critical("REPL session failed", exc_info=True)
             raise e
@@ -156,3 +165,7 @@ class App:
                 print("Command is not executable")
         else:
             print(f"No such command: {command_name}")
+
+
+if __name__ == "__main__":
+    App()
