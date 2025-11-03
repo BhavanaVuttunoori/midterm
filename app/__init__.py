@@ -48,7 +48,7 @@ class App:
             ]
         )
 
-        # Test logger to confirm configuration loaded successfully
+        # Test logger
         test_logger = logging.getLogger("setup_test")
         test_logger.info("Logging configured successfully with level %s at %s", log_level, log_output)
 
@@ -79,8 +79,7 @@ class App:
             return
 
         for module_info in pkgutil.iter_modules([plugins_package.replace('.', '/')]):
-            if not module_info.ispkg:
-                continue
+            # Load all modules (remove package-only filter)
             self._process_plugin_module(plugins_package, module_info.name)
 
     def _plugins_directory_exists(self, plugins_package: str) -> bool:
@@ -94,7 +93,7 @@ class App:
         try:
             plugin_module = importlib.import_module(f'{plugins_package}.{plugin_name}')
             self._register_commands_from_module(plugin_module, plugin_name)
-        except Exception as error:  # pylint: disable=broad-except
+        except Exception as error:
             self.logger.error("Error loading plugin %s: %s", plugin_name, str(error), exc_info=True)
 
     def _register_commands_from_module(self, plugin_module, plugin_name: str):
