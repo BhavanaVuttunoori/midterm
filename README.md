@@ -1,16 +1,18 @@
 
-# MIDTERM: Advanced Python Calculator (Windows Setup)
+# MIDTERM: Advanced Python Calculator
 
 ## Project Overview
 
 This project is a **Python-based advanced calculator** that supports:
 
 * Interactive **REPL command-line interface**
-* **Arithmetic operations**: addition, subtraction, multiplication, division, **square**, **modulus**, **power**
+* **Arithmetic operations**: addition, subtraction, multiplication, division, square, modulus, power, root, integer division, percent, absolute difference
 * **Calculation history management** using Pandas (view, clear, save, load)
 * **Dynamic plugin system** for adding new functionalities
 * **Comprehensive logging** and **environment variable configuration**
-* Modular, maintainable, and extensible code using **design patterns**
+* Modular, maintainable, and extensible code using **design patterns** (Factory, Memento, Observer)
+* Undo/Redo functionality
+* Error handling and input validation
 
 The architecture is designed for easy future enhancements while maintaining clean, robust code.
 
@@ -18,11 +20,10 @@ The architecture is designed for easy future enhancements while maintaining clea
 
 ## Prerequisites
 
-* **Python 3.10+** (64-bit) – Ensure “Add Python to PATH” is checked during install.
-* **pip** – Comes with Python.
-* **Git for Windows** – Needed for version control.
-* Optional: **Visual C++ Redistributable** for some Python packages:
-  [VC Redist 64-bit](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+* **Python 3.10+** (64-bit)
+* **pip**
+* **Git**
+* Optional: Visual C++ Redistributable for Windows
 
 ---
 
@@ -42,20 +43,16 @@ Avoid “filename too long” errors:
 ### Install Git for Windows
 
 1. [Download Git](https://git-scm.com/download/win)
-2. During installation, check:
-
-   * “Git from the command line and also from 3rd-party software”
-   * “Use Windows’ default console window”
-   * “Enable experimental support for pseudo consoles” (optional)
+2. Check recommended options during installation.
 3. Verify installation:
 
-```bash
+```cmd
 git --version
 ```
 
 4. Configure Git:
 
-```bash
+```cmd
 git config --global user.name "Your Name"
 git config --global user.email "you@example.com"
 git config --global init.defaultBranch main
@@ -63,125 +60,157 @@ git config --global core.autocrlf true
 git config --global core.longpaths true
 ```
 
-5. Generate SSH key for GitHub (optional, HTTPS works too):
+---
+
+## Ubuntu/Linux Setup
+
+1. **Install Python 3.10+ and pip**:
 
 ```bash
-ssh-keygen -t ed25519 -C "you@example.com"
-eval $(ssh-agent -s)
-ssh-add ~/.ssh/id_ed25519
-cat ~/.ssh/id_ed25519.pub | clip
+sudo apt update
+sudo apt install python3.10 python3.10-venv python3-pip git -y
+python3 --version
+pip3 --version
 ```
 
-Add the public key in GitHub → Settings → SSH and GPG keys → “New SSH key”.
+2. **Create project folder**:
+
+```bash
+mkdir ~/advanced_calculator
+cd ~/advanced_calculator
+```
+
+3. **Create & activate a virtual environment**:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+4. **Upgrade pip and install dependencies**:
+
+```bash
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+pip install python-dotenv pandas colorama pytest pytest-cov
+```
 
 ---
 
-## Project Setup
+## Project Implementation Steps
 
-1. **Create project folder** (short path recommended, e.g., `C:\dev`):
+### Step 1: Implement Arithmetic Operations (Factory Pattern)
 
-```cmd
-mkdir C:\dev
-cd C:\dev
+Operations implemented:
+
+* Addition, Subtraction, Multiplication, Division
+* Power, Root, Modulus, Integer Division
+* Percent, Absolute Difference
+
+Use **operation classes** and a **Factory** to instantiate them dynamically.
+
+### Step 2: Undo/Redo (Memento Pattern)
+
+* Save each calculator state in a `CalculatorMemento`
+* Allow undoing or redoing multiple steps
+
+### Step 3: Observer Pattern
+
+* `LoggingObserver` logs calculations
+* `AutoSaveObserver` saves history automatically
+* Calculator notifies observers after each calculation
+
+### Step 4: Configuration Management (.env)
+
+Example `.env` file:
+
+```
+CALCULATOR_LOG_DIR=logs
+CALCULATOR_HISTORY_DIR=history
+CALCULATOR_MAX_HISTORY_SIZE=50
+CALCULATOR_AUTO_SAVE=True
+CALCULATOR_PRECISION=2
+CALCULATOR_MAX_INPUT_VALUE=1000000
+CALCULATOR_DEFAULT_ENCODING=utf-8
 ```
 
-2. **Create & activate a virtual environment**:
+Load using `python-dotenv`.
 
-```cmd
-python -m venv venv
-venv\Scripts\activate.bat
+### Step 5: Error Handling & Validation
+
+* Custom exceptions for operations and input validation
+* Ensure numeric inputs and valid operations
+
+### Step 6: Logging
+
+* Log all calculations and errors to a configurable file
+* Use different log levels (`DEBUG`, `INFO`, `ERROR`)
+
+### Step 7: REPL Commands
+
+Supported commands:
+
+* Arithmetic: `add`, `subtract`, `multiply`, `divide`, `power`, `root`, `modulus`, `int_divide`, `percent`, `abs_diff`
+* History: `history_show`, `history_clear`, `history_save`, `history_load`
+* Utility: `last_op`, `menu`, `exit`
+
+### Step 8: Serialization & CSV Persistence
+
+* Save history to CSV
+* Load history from CSV
+* Use Pandas for efficient history management
+
+### Step 9: Unit Testing
+
+```bash
+pytest -v
+pytest --cov=app --cov-report=html --cov-fail-under=90
 ```
 
-3. **Upgrade pip and install dependencies**:
+* Test operations, undo/redo, logging, error handling, and edge cases
 
-```cmd
-python -m pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
-```
+### Step 10: Optional Enhancements
+
+* Dynamic help menu
+* Color-coded CLI using Colorama
+* Extensible plugin system
 
 ---
 
 ## Running the Calculator
 
-With the virtual environment activated:
+With virtual environment activated:
 
-```cmd
+```bash
 python main.py
 ```
-
-This launches the **REPL interface**, supporting commands like:
-
-* `add <num1> <num2>`
-* `subtract <num1> <num2>`
-* `multiply <num1> <num2>`
-* `divide <num1> <num2>`
-* `square <num>`
-* `modulus <num1> <num2>`
-* `power <num1> <num2>`
-* `history_show` | `history_clear` | `history_save` | `history_load`
-* `last_op` | `menu` | `exit`
-
----
-
-## Enhanced Features
-
-* **New arithmetic operations**: `square`, `modulus`, `power`
-* **Dynamic Plugin System**: Add new functionality without changing core code
-* **Calculation History Management**: view, save, load, and clear history with Pandas
-* **Robust Logging**: configurable log levels via environment variables
-* **Design Patterns**: Facade, Command, Factory Method for modularity and scalability
-* **Error Handling**: EAFP & LBYL approaches for safe operation
-* **Interactive REPL**: Real-time feedback for commands
 
 ---
 
 ## Environment Variables (Optional)
 
-Set environment variables in Windows (Control Panel → System → Environment Variables) for logging and history:
+Set environment variables for logging and history:
 
 ```text
 LOG_LEVEL=DEBUG
-LOG_OUTPUT=.\logs\app.log
-HISTORY_PATH=.\calculator_history
+LOG_OUTPUT=./logs/app.log
+HISTORY_PATH=./calculator_history
 ENVIRONMENT=DEVELOPMENT
 ```
 
 ---
 
-## Testing & Coverage
+## Useful Commands
 
-Run unit tests:
+| Task                    | Windows Command                 | Linux/Ubuntu Command            |
+| ----------------------- | ------------------------------- | ------------------------------- |
+| Activate venv           | `venv\Scripts\activate.bat`     | `source venv/bin/activate`      |
+| Deactivate venv         | `deactivate`                    | `deactivate`                    |
+| Upgrade pip             | `python -m pip install -U pip`  | `python3 -m pip install -U pip` |
+| List installed packages | `pip list`                      | `pip list`                      |
+| Export environment      | `pip freeze > requirements.txt` | `pip freeze > requirements.txt` |
+| Clear terminal          | `cls`                           | `clear`                         |
+| Kill Python process     | `Ctrl + C`                      | `Ctrl + C`                      |
+| Open file               | `notepad filename.py`           | `nano filename.py`              |
 
-```cmd
-pytest -v
-```
-
-Check code coverage and linting:
-
-```cmd
-pytest --pylint --cov
-```
-
-* Ensures the application behaves as expected
-* 32 tests cover arithmetic operations, history, and edge cases
-
----
-
-## Useful Windows Commands
-
-| Task                    | Command                         |
-| ----------------------- | ------------------------------- |
-| Activate venv           | `venv\Scripts\activate.bat`     |
-| Deactivate venv         | `deactivate`                    |
-| Upgrade pip             | `python -m pip install -U pip`  |
-| List installed packages | `pip list`                      |
-| Export environment      | `pip freeze > requirements.txt` |
-| Clear terminal          | `cls`                           |
-| Kill Python process     | `Ctrl + C`                      |
-| Open file               | `notepad filename.py`           |
-| Check Python path       | `where python`                  |
-| Check Git path          | `where git`                     |
-
----
-
-?
+-
