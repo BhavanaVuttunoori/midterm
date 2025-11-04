@@ -1,3 +1,6 @@
+from app.history import History
+from app.logger import Logger
+from app.calculator_config import Config
 from decimal import Decimal
 from app.plugins import square, power, modulus
 from calculator.engine import CalcEngine
@@ -14,6 +17,7 @@ class App:
         print("Calculator App Started\n")
         self.show_welcome()
         self.run_demo()
+	self.history = History()
         self.command_loop()  # <-- Add this
 
     def show_welcome(self):
@@ -85,10 +89,31 @@ class App:
                     print(Percent().calculate(args[0], args[1]))
                 elif command == "abs_diff" and len(args) == 2:
                     print(AbsDiff().calculate(args[0], args[1]))
-                else:
+                elif command == "undo":
+		    undone = self.history.undo()
+		    print(f"Undid: {undone}" if undone else "Nothing to undo.")
+		elif command == "redo":
+		    redone = self.history.redo()
+		    print(f"Redid: {redone}" if redone else "Nothing to redo.")
+		elif command == "history":
+		    for item in self.history.get_all():
+		        print(item)
+		elif command == "clear":
+		    self.history.clear()
+		    print("History cleared.")
+		else:
                     print("Unknown command or wrong number of arguments.")
-            except Exception as e:
+		    result = None
+
+    		# If calculation succeeded, log and save to history
+    		if result is not None:
+		        Logger.log(f"{command} {args} = {result}")
+		        self.history.add(f"{command} {args} = {result}")
+		        print(result)
+	except Exception as e:
                 print("Error:", e)
+		Logger.log(f"Error performing {command} {args}: {e}")
+
     def run(self):
         while True:
             user_input = input("> ").strip()
